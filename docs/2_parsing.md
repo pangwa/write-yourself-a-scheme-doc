@@ -106,7 +106,7 @@ First, we need to define a data type that can hold any Lisp value:
 ```fsharp
 type LispVal = 
     | LispAtom of string
-    | ListAtom of List<LispVal>
+    | ListList of List<LispVal>
     | LispDottedList of List<LispVal> * LispVal
     | LispNumber of int64
     | LispString of string
@@ -291,3 +291,89 @@ Test Pased - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duratio
 3. Add a `Float` constructor to LispVal, and support R5RS syntax for [decimals](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.2.4).
 4. Add data types and parsers to support the [full numeric tower](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.2.1) of Scheme numeric types. F# has built-in types to represent many of these; check the documents. For the others, you can define compound types (e.g. Records) that represent e.g. a `Rational` as a numberator and denominator, or a `Complex` as a real and imaginary part (each itself a `Real`).
 5. Add more tests to `Parser.fs`, so we can be more confident with our parser functionality.
+
+
+## Recursive Parsers: Adding lists, dotted lists, and quoted datums
+Next, we add a few more parser actions to our interpreter. Start with the parenthesized lists that make Lisp famous:
+
+```fsharp
+let parseList = sepBy parseExpr spaces1 |>> LispList
+```
+
+This works analogously to `parseNumber`, first parsing a series of expressions separated by whitespace (`sepBy parseExpr spaces1`) and then apply the List constructor to it within the Parser result using the `|>>` combinator. Note too that we can pass `parseExpr` to `sepBy`, even though it's an action we wrote ourselves.
+
+The dotted-list parser is somewhat more complex, but still uses only concepts that we're already familiar with:
+```fsharp
+let parseDottedList =
+    pipe2 (sepEndBy parseExpr spaces1) (pchar '.' >>. spaces >>. parseExpr) (fun head tail -> DottedList(head, tail))
+```
+Here we use the parser `pipe2 p1 p2 f` applies the parsers `p1` and `p2` in sequence. It returns the result of the function application `f a b`, where `a` and `b` are the results returned by `p1` and `p2`.
+
+We also use `sepEndby` and the `>>.` combinators to build parsers.
+
+Next, let's add support for the single-quote syntactic sugar of Scheme:
+
+```fsharp
+let parseQuoted =
+    pchar '\'' >>. parseExpr
+    |>> (fun expr -> [ LispAtom "quote"; expr ] |> LispList)
+```
+
+Most of this is fairly familiar stuff: it reads a single quote character, reads an expression and binds it to expr using the `|>>` combinator, and then returns `(quote x)`, to use Scheme notation. The `LispAtom` constructor works like an ordinary function: you pass it the String you're encapsulating, and it gives you back a `LispVal`. You can do anything with this `LispVal` that you normally could, like put it in a list.
+
+Finally, edit our definition of parseExpr to include our new parsers:
+
+```fsharp
+let parseExpr =
+    choice [ parseAtom
+             parseString
+             parseNumber
+             parseQuoted
+             (between (pchar '(') (pchar ')') (attempt parseList <|> parseDottedList)) ]
+```
+Here we used the `choice` combinator instead of `<|>`, `choice` is a optimized implementation of the `<|>` combinator.
+
+This illustrates one last feature of `Parsec`: backtracking. `parseList` and `parseDottedList` recognize identical strings up to the dot; this breaks the requirement that a choice alternative may not consume any input before failing. The `attempt` combinator attempts to run the specified parser, but if it fails, it backs up to the previous state. This lets you use it in a choice alternative without interfering with the other alternative.
+
+Try to compile the project and bong! You would get a bounch of compile errors like
+```
+Error FS0039: undefined value or constructure "parseExpr".
+```
+
+This is we defined the `parseExpr` as a recursive value because it was referenced in `parseList` and `parseQuoted`, it is tricky to define such data structures in F#. Fortunately `FParsec` provides a workaround for such case the `createParserForwardedToRef`, 
+Add codes to the `Parser.fs`
+```fsharp
+let parseExpr, parseExprRef = createParserForwardedToRef () // add before parseList and parseDottedList
+
+// put after the parseQuoted function definition
+parseExprRef
+:= choice [ parseAtom
+            parseString
+            parseNumber
+            parseQuoted
+            (between (pchar '(') (pchar ')') (attempt parseList <|> parseDottedList)) ]
+```
+
+The `createParserForwardedToRef()` creates a parser which will actually use the parserRef (which is a [reference cell](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/reference-cells) in F#) later on. And we use the  `:=` syntax to rebind the `parseExpRef` value. 
+
+Now compile and run the code:
+```bash
+$ dotnet run -- "(a test)"
+Found value
+$ dotnet run -- "(a (nested) test)"
+$ dotnet run -- "(a (dotted . list) test)"
+$ dotnet run -- "(a '(quoted (dotted . list)) test)"
+Found value
+$ dotnet run -- "(a '(imbalanced parens)"
+No match: Error in Ln: 1 Col: 24
+Expecting: whitespace or ')'
+```
+
+Note that by referring to `parseExpr` within our parsers, we can nest them arbitrarily deep. Thus, we get a full Lisp reader with only a few definitions. That's the power of recursion.
+
+
+## Exercises
+1. Add support for the [backquote](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-7.html#%_sec_4.2.6) syntactic sugar: the Scheme standard details what it should expand into (quasiquote/unquote).
+2. Add support for [vectors](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.6). The F# representation is up to you: List, Array, Seq. You may have a better idea how to do this after the section on set!, later in this tutorial.
+3. Instead of using the `attempt` combinator, left-factor the grammar so that the common subsequence is its own parser. You should end up with a parser that matches a string of expressions, and one that matches either nothing or a dot and a single expression. Combining the return values of these into either a List or a DottedList is left as a (somewhat tricky) exercise for the reader: you may want to break it out into another helper function.
+4. Add more tests to check the result of the `parseList` and `parseDottedList` functions
