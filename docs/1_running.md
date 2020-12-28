@@ -33,7 +33,7 @@ $ dotnet run -- jacky
 
 The command `dotnet run` compiles and run the program. And in the second command we use the `--` to pass arguments to the program.
 
-### Exercises
+## Exercises
 1. Change the program so it reads two arguments from the command line, and prints out a message using both of them
 1. Change the program so it performs a simple arithmetic operation on the two arguments and prints out the result. You can use `Int32.tryParse` to convert a string to a number, and `sprintfn` function to convert it to string. Play around with different operations.
 1. Console.ReadLine() reads a line from the console and returns it as a string. Change the program so it prompts for a name, reads the name, and then prints that instead of the command line value
