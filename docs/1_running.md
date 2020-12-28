@@ -4,9 +4,9 @@ First, you'll need to install .Net. .Net is a free, cross-platform, open source 
 For Windows users, Visual Studio Communtity Version is a pretty great IDE to develop F# applications.  VS Code with the [Ionide Extensions](https://ionide.io/Editors/Code/getting_started.html) extension installed is also a great alternative to use on other platforms, they can be used on MacOS or Linux.
 
 
-Now, it's time for your first F# program. This program will read a name off the command line and then print a greeting. Create a new project using command `dotnet new console -lang F# --name hello-world `. You can find more on the `dotnet new`` command by checking its [documentation](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-new)
+Now, it's time for your first F# program. This program will read a name off the command line and then print a greeting. Create a new project using command `dotnet new console -lang F# --name write-yourself-a-scheme `. You can find more on the `dotnet new`` command by checking its [documentation](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-new)
 
-Goto the directory using `cd hello-world`, edit `Program.fs` and update its content to below:
+Goto the directory using `cd write-yourself-a-scheme`, edit `Program.fs` and update its content to below:
 ```fsharp
 open System
 
