@@ -5,19 +5,19 @@ Now that we can deal with type errors, bad arguments, and so on, we'll flesh out
 Start by adding the following into the list of primitives:
 
 ```fsharp
-        Add("=", numBoolBinop (=)).
-        Add("<", numBoolBinop (<)).
-        Add(">", numBoolBinop (>)).
-        Add("/=", numBoolBinop (<>)).
-        Add(">=", numBoolBinop (>=)).
-        Add("<=", numBoolBinop (<=)).
-        Add("&&", boolBoolBinop (&&)).
-        Add("||", boolBoolBinop (||)).
-        Add("string=?", strBoolBinop (=)).
-        Add("string<?", strBoolBinop (<)).
-        Add("string>?", strBoolBinop (>)).
-        Add("string<=?", strBoolBinop (<=)).
-        Add("string>=?", strBoolBinop (>=))
+        .Add("=", numBoolBinop (=))
+        .Add("<", numBoolBinop (<))
+        .Add(">", numBoolBinop (>))
+        .Add("/=", numBoolBinop (<>))
+        .Add(">=", numBoolBinop (>=))
+        .Add("<=", numBoolBinop (<=))
+        .Add("&&", boolBoolBinop (&&))
+        .Add("||", boolBoolBinop (||))
+        .Add("string=?", strBoolBinop (=))
+        .Add("string<?", strBoolBinop (<))
+        .Add("string>?", strBoolBinop (>))
+        .Add("string<=?", strBoolBinop (<=))
+        .Add("string>=?", strBoolBinop (>=))
 ```
 These depend on helper functions that we haven't written yet: `numBoolBinop`, `boolBoolBinop` and `strBoolBinop`. Instead of taking a variable number of arguments and returning an integer, these both take exactly two arguments and return a boolean. They differ from each other only in the type of argument they expect, so let's factor the duplication into a generic `boolBinop` function that's parametrized by the unpacker function it applies to its arguments:
 
@@ -204,3 +204,110 @@ let rec eqv =
     | badArgList -> NumArgs(2, badArgList) |> throwError
 ```
 
+## equal? and Weak Typing
+Since we introduced weak typing above, we'd also like to introduce an `equal?` function that ignores differences in the type tags and only tests if two values can be interpreted the same. For example, `(eqv? 2 "2")` = `#f`, yet we'd like `(equal? 2 "2")` = `#t`. Basically, we want to try all of our unpack functions, and if any of them result in F# values that are equal, return `true`.
+
+The obvious way to approach this is to store the unpacking functions in a list and use `mapM` to execute them in turn. Unfortunately, this doesn't work, because standard F# only lets you put objects in a list if they're the same type. The various unpacker functions return different types, so you can't store them in the same list.
+
+We could get around this by boxing the result value of the unpacking functions to `obj` which is the base type of everything. Let's define it as `anyUnpacker`
+
+```fsharp
+let anyUnpacker unpacker v =
+    unpacker v |> Result.map (fun x -> x :> obj)
+```
+
+The `anyUnpacker` function accepts an `unpacker` and a value `v`, it firstly apply `unpacker` to `v`, then cast `v` to the `obj` type.
+
+Rather than jump straight to the `equal?` function, let's first define a helper function that takes an `Unpacker` and then determines if two `LispVal`s are equal when it unpacks them:
+```fsharp
+let unpackEquals arg1 arg2 (unpacker: LispVal -> ThrowsError<obj>) =
+    monad {
+        let! unpacked1 = unpacker arg1
+        let! unpacked2 = unpacker arg2
+        return (unpacked1 = unpacked2)
+    }
+    </ catch /> (fun _ -> result false)
+```
+Here we use `FSharpPlus`'s monad synatx again which could simplify the code, and we also use the `</ catch />` statement to handle errors.
+
+Finally, we can define `equal?` in terms of these helpers:
+
+```fsharp
+let rec equalFn =
+    function
+    | [ LispList a; LispList b ] ->
+        let ret =
+            a.Length = b.Length
+            && List.zip a b
+               |> List.forall (fun (x, y) -> equal2 x y)
+
+        ret |> LispBool |> Result.Ok
+    | [ LispDottedList (a1, b1); LispDottedList (a2, b2) ] ->
+        let ret =
+            a1.Length = a2.Length
+            && List.zip a1 a2
+               |> List.forall (fun (x, y) -> equal2 x y)
+            && equal2 b1 b2
+
+        ret |> LispBool |> Result.Ok
+    | [ a; b ] ->
+        let unpackers =
+            [ anyUnpacker unpackNum
+              anyUnpacker unpackStr
+              anyUnpacker unpackBool ]
+
+        let anyUnpackerEqual =
+            unpackers
+            |> List.exists
+                (fun up ->
+                    let ret = unpackEquals a b up
+                    ret = Result.Ok(true))
+
+        let ret =
+            anyUnpackerEqual
+            || (eqv [ a; b ] |> (=) (Result.Ok(LispBool true)))
+
+        ret |> LispBool |> Result.Ok
+    | badArgList -> NumArgs(2, badArgList) |> throwError
+
+and equal2 x y =
+    equalFn [ x; y ] |> (=) (Result.Ok(LispBool true))
+```
+
+First we makes a list of `unpackers` using the `anyUnpacker` helper, 
+then map the `unpackers` to check if the list is equals using any `unpacker`.
+
+To use these functions, insert them into our primitives list:
+```fsharp
+        .Add("car", car)
+        .Add("cdr", cdr)
+        .Add("cons", cons)
+        .Add("eqv?", eqv)
+        .Add("eq?", eqv)
+        .Add("equal?", equalFn)
+```
+Compile and run the code:
+```bash
+$ dotnet run -- "(cdr '(a simple test))"
+evaluated: (simple test)
+$ dotnet run -- "(car (cdr '(a simple test)))"
+evaluated: simple
+$ dotnet run -- "(car '((this is) a test))"
+evaluated: (this is)
+$ dotnet run -- "(cons '(this is) 'test)"
+evaluated: ((this is) . test)
+$ dotnet run -- "(cons '(this is) '())"
+evaluated: ((this is))
+$ dotnet run -- "(eqv? 1 3)"
+#f
+$ dotnet run -- "(eqv? 3 3)"
+#t
+$ dotnet run -- "(eqv? 'atom 'atom)"
+#t
+```
+
+## Exercises
+1. Instead of treating any non-false value as true, change the definition of `if` so that the predicate accepts only `bool` values and throws an error on any others.
+2. Implement the [cond](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-7.html#%_idx_106) and [case](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-7.html#%_idx_114) expressions.
+3. Add the rest of the [string functions](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.5). You don't yet know enough to do `string-set!`;  but you'll have enough information after the next two sections.
+4. Add unit tests to the new primitive functions.
