@@ -116,7 +116,8 @@ type LispVal =
 This is an example of an `algebraic data type` (which called [Record](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/records) in F#): it defines a set of possible values that a variable of type LispVal can hold. Each alternative (called a constructor and separated by |) contains a name for the constructor along with the type of data that the constructor can hold. In this example, a LispVal can be:
 
 * An Atom, which stores a String naming the atom
-* A List, which stores a list of other LispVals (Haskell lists are denoted by brackets); also called a proper list
+* A List, which stores a list of other LispVals (F# lists are denoted by the List<'T> generic type); also called a proper list
+> We prefer List over the Seq type here, because List can be patten matched which would be quite handy.
 * A DottedList, representing the Scheme form (a b . c); also called an improper list. This stores a list of all elements but the last, and then stores the last element as another field
 * A Number, containing a Haskell Integer
 * A String, containing a Haskell String
