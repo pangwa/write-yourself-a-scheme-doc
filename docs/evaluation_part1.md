@@ -168,6 +168,7 @@ Next, we define the list of primitives that we support:
 
 ```fsharp
 open FSharpPlus // for the divRem function
+open FSharpPlus.Data
 
 let primitives: Map<string, List<LispVal> -> LispVal> =
     Map.empty.
