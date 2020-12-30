@@ -67,7 +67,9 @@ let rec eval =
   | LispBool _ as v -> Result.Ok v
   | LispList [ LispAtom "quote"; v ] -> Result.Ok v
   | LispList (LispAtom func:: args) -> args |> mapM eval |> Result.bind (apply func)
-
+  | badform ->
+      BadSpecialForm("Unrecognized special form", badform)
+      |> throwError
 and mapM fn =
     function
     | [] -> Result.Ok []
