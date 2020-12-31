@@ -16,4 +16,4 @@ Since each lesson builds upon code written in previous ones, it's generally best
 
 This tutorial assumes that you have the latest DotNet Core runtime installed. The command "dotnet" should be available and in your path.
 
-The source code will be found at the [Write Your a Scheme in 48 Hours using F# repo](https://github.com/pangwa/write-yourself-a-scheme)
+The source code can found at the [Write Your a Scheme in 48 Hours using F# repo](https://github.com/pangwa/write-yourself-a-scheme). The main branch of this repo is a empty project to start with. The source code of each chapter can be found in the coresponding branch.
