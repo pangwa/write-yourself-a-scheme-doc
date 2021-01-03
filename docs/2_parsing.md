@@ -1,7 +1,7 @@
 # Parsing
 
 ## Writing a Simple Parser
-Now, let's try writing a very simple parser. We'll be using the  [fparsc](https://www.quanttec.com/fparsec/) to write a scheme parser in this chapter. You need to install `fparsc` using below command:
+Now, let's try writing a very simple parser. We'll be using the  [fparsec](https://www.quanttec.com/fparsec/) to write a scheme parser in this chapter. You need to install `fparsec` using below command:
 
 ```bash
 dotnet add package fparsec
@@ -24,9 +24,9 @@ type Parser<'t> = Parser<'t, LispState>
 let pSymbol: Parser<_> = anyOf "!#$%&|*+-/:<=>?@^_~"
 ```
 
-This is another example of a monad: in this case, the "extra information" that is being hidden is all the info about position in the input stream, backtracking record, first and follow sets, etc. `FParsec` takes care of all of that for us. We need only use the `FParsec` library function oneOf, and it'll recognize a single one of any of the characters in the string passed to it. `FParsec` provides a number of pre-built parsers: for example, letter and digit are library functions. And as you're about to see, you can compose primitive parsers into more sophisticated productions.
+This is an example of a monad: in this case, the "extra information" that is being hidden is all the info about position in the input stream, backtracking record, first and follow sets, etc. `FParsec` takes care of all of that for us. We need only use the `FParsec` library function oneOf, and it'll recognize a single one of any of the characters in the string passed to it. `FParsec` provides a number of pre-built parsers: for example, letter and digit are library functions. And as you're about to see, you can compose primitive parsers into more sophisticated productions.
 
-You may also noted that we add the explict type infomration for pSymbol, because we'll get a compile error without it. The error mentions F#'s "value restriction" which was explained in the  [documentation](https://www.quanttec.com/fparsec/tutorial.html#fs-value-restriction).
+You may also noted that we add the explict type information for pSymbol, because we'll get a compile error without it. The error mentions F#'s "value restriction" which was explained in the  [documentation](https://www.quanttec.com/fparsec/tutorial.html#fs-value-restriction).
 
 Let's define a function to call our parser and handle any possible errors:
 ```fsharp
@@ -82,8 +82,7 @@ let readExpr input =
     | Failure (_, err, _) -> sprintf "No match: %s"  (err.ToString())
     | Success _ -> "Found value"
 ```
-The `>>.` is a combinator that `FParsc` provides. The parser ``p1 >>. p2`` parses p1 and p2 in sequence and returns the result of p2. There is another 
-companation operator `.>>` which also parses p1 and p2 in sequence but returns the result of p1 instead of p2. In each case the point points to the side of the parser whose result is returned. By combining both operators in p1 >>. p2 .>> p3 we obtain a parser that parses p1, p2 and p3 in sequence and returns the result from p2.
+The `>>.` is a combinator that `FParsc` provides. The parser ``p1 >>. p2`` parses p1 and p2 in sequence and returns the result of p2. There is another companation operator `.>>` which also parses p1 and p2 in sequence but returns the result of p1 instead of p2. In each case the point points to the side of the parser whose result is returned. By combining both operators in p1 >>. p2 .>> p3 we obtain a parser that parses p1, p2 and p3 in sequence and returns the result from p2. As a mnemonic the dot at the composer helpers `>>.` and `.>>` mean which of the parsers are meant to be kept.
 
 Compile and run this code. 
 ```bash
@@ -106,24 +105,24 @@ First, we need to define a data type that can hold any Lisp value:
 ```fsharp
 type LispVal = 
     | LispAtom of string
-    | ListList of List<LispVal>
+    | LispList of List<LispVal>
     | LispDottedList of List<LispVal> * LispVal
     | LispNumber of int64
     | LispString of string
-    | LispBool of boo
+    | LispBool of bool
 ```
 
 This is an example of an `algebraic data type` (which called [Record](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/records) in F#): it defines a set of possible values that a variable of type LispVal can hold. Each alternative (called a constructor and separated by |) contains a name for the constructor along with the type of data that the constructor can hold. In this example, a LispVal can be:
 
 * An Atom, which stores a String naming the atom
 * A List, which stores a list of other LispVals (F# lists are denoted by the List<'T> generic type); also called a proper list
-> We prefer List over the Seq type here, because List can be patten matched which would be quite handy.
+> We prefer List over the more generic Seq type here, because List can be patten matched which will become useful later on.
 * A DottedList, representing the Scheme form (a b . c); also called an improper list. This stores a list of all elements but the last, and then stores the last element as another field
-* A Number, containing a Haskell Integer
-* A String, containing a Haskell String
-* A Bool, containing a Haskell boolean value
+* A Number, containing an F# Integer
+* A String, containing an F# String
+* A Bool, containing an F# boolean value
 
-The types are prefixed with the `Lisp` prifix to avoid confliction with the existing types or keywords in F#.
+The types are prefixed with the `Lisp` prefix to avoid conflicting with the existing types or keywords in F#.
 
 Next, let's add a few more parsing functions to create values of these types. A string is a double quote mark, followed by any number of non-quote characters, followed by a closing quote mark:
 
@@ -171,6 +170,15 @@ let parseExpr = parseAtom <|>
                 parseString <|> 
                 parseNumber
 ```
+
+Now update the `readExpr` function to use `parseExpr`
+```fsharp
+let readExpr input =
+    match run (spaces >>. parseExpr) input with
+        | Failure (_, err, _) -> sprintf "No match: %s" (err.ToString())
+        | Success _ -> "Found Value"
+```
+
 
 Compile and run this code, and you'll notice that it accepts any number, string, or symbol, but not other strings:
 ```bash
