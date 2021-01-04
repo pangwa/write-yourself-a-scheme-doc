@@ -113,7 +113,7 @@ type LispVal =
     | LispBool of boo
 ```
 
-This is an example of an `algebraic data type` (which called [Record](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/records) in F#): it defines a set of possible values that a variable of type LispVal can hold. Each alternative (called a constructor and separated by |) contains a name for the constructor along with the type of data that the constructor can hold. In this example, a LispVal can be:
+This is an example of an `algebraic data type` (which called a [discriminated union](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/discriminated-unions) in F#): it defines a set of possible values that a variable of type LispVal can hold. Each alternative (called a constructor and separated by |) contains a name for the constructor along with the type of data that the constructor can hold. In this example, a LispVal can be:
 
 * An Atom, which stores a String naming the atom
 * A List, which stores a list of other LispVals (F# lists are denoted by the List<'T> generic type); also called a proper list
