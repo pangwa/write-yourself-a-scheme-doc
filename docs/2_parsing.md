@@ -82,7 +82,8 @@ let readExpr input =
     | Failure (_, err, _) -> sprintf "No match: %s"  (err.ToString())
     | Success _ -> "Found value"
 ```
-The `>>.` is a combinator that `FParsc` provides. The parser ``p1 >>. p2`` parses p1 and p2 in sequence and returns the result of p2. There is another companation operator `.>>` which also parses p1 and p2 in sequence but returns the result of p1 instead of p2. In each case the point points to the side of the parser whose result is returned. By combining both operators in p1 >>. p2 .>> p3 we obtain a parser that parses p1, p2 and p3 in sequence and returns the result from p2. As a mnemonic the dot at the composer helpers `>>.` and `.>>` mean which of the parsers are meant to be kept.
+The `>>.` is a combinator that `FParsc` provides. The parser ``p1 >>. p2`` parses p1 and p2 in sequence and returns the result of p2.
+- There is another companation operator `.>>` which also parses p1 and p2 in sequence but returns the result of p1 instead of p2. In each case the point points to the side of the parser whose result is returned. By combining both operators in p1 >>. p2 .>> p3 we obtain a parser that parses p1, p2 and p3 in sequence and returns the result from p2. As a mnemonic the dot at the composer helpers `>>.` and `.>>` mean which of the parsers are meant to be kept.
 
 Compile and run this code. 
 ```bash
@@ -248,7 +249,7 @@ let readExpr input =
 
 ```
 
-Remove all LispVal and parsing code and add one line:
+Now go back to the main file `Program.fs` Remove all LispVal and parsing code and add one line:
 ```fsharp
 open Parser
 ```
@@ -314,7 +315,7 @@ This works analogously to `parseNumber`, first parsing a series of expressions s
 The dotted-list parser is somewhat more complex, but still uses only concepts that we're already familiar with:
 ```fsharp
 let parseDottedList =
-    pipe2 (sepEndBy parseExpr spaces1) (pchar '.' >>. spaces >>. parseExpr) (fun head tail -> DottedList(head, tail))
+    pipe2 (sepEndBy parseExpr spaces1) (pchar '.' >>. spaces >>. parseExpr) (fun head tail -> LispDottedList(head, tail))
 ```
 Here we use the parser `pipe2 p1 p2 f` applies the parsers `p1` and `p2` in sequence. It returns the result of the function application `f a b`, where `a` and `b` are the results returned by `p1` and `p2`.
 
@@ -349,7 +350,7 @@ Try to compile the project and bong! You would get a bounch of compile errors li
 Error FS0039: undefined value or constructure "parseExpr".
 ```
 
-This is we defined the `parseExpr` as a recursive value because it was referenced in `parseList` and `parseQuoted`, it is tricky to define such data structures in F#. Fortunately `FParsec` provides a workaround for such case the `createParserForwardedToRef`, 
+This error happens because we defined the `parseExpr` as a recursive value, referencing in `parseList` and `parseQuoted` which also need to reference `parseExpr`. Fortunately `FParsec` provides a workaround for such case the `createParserForwardedToRef`, 
 Add codes to the `Parser.fs`
 ```fsharp
 let parseExpr, parseExprRef = createParserForwardedToRef () // add before parseList and parseDottedList
