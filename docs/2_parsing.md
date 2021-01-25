@@ -125,17 +125,41 @@ This is an example of an `algebraic data type` (which called a [discriminated un
 
 The types are prefixed with the `Lisp` prefix to avoid conflicting with the existing types or keywords in F#.
 
-Next, let's add a few more parsing functions to create values of these types. A string is a double quote mark, followed by any number of non-quote characters, followed by a closing quote mark:
+Next, let's add a few more parsing functions to create values of these types. A string is a double quote mark, followed by any number of non-quote characters, followed by a closing quote mark.
 
+We'll be using [Parser Combinators](https://fsharpforfunandprofit.com/posts/understanding-parser-combinators/), a powerful tool that allows us to build smaller parsers one at a time in order to create more complex parsers.
+
+Looking at our definition: `A string is a double quote mark, followed by any number of non-quote characters, followed by a closing quote mark.`
+
+Let's start with the meat of the sandwich: "any number of non-quote characters." That can be broken up into two parts:
+1. "non-quote characters"
+2. "any number of" (which is really just #1 repeating)
+
+Step 1:
 ```fsharp
-let parseString: Parser<LispVal> = 
-      between (pstring "\"") (pstring "\"") (manyChars (noneOf (Seq.toList "\""))) 
-            |>> LispString
+let notQuoteChar = noneOf (Seq.toList "\"")
 ```
 
+Step 2:
+```fsharp
+let unquotedString = manyChars notQuoteChar
+```
+
+So now we need an `unquotedString` between two quotes. FParsec provides just that functionality with the `between` function.
+
+We partially apply the `between` combinator to create a parser we can reuse:
+```fsharp
+let betweenQuotes = between (pstring "\"") (pstring "\"")
+```
 We're using the `between` combinator, the parser `between pOpen pClose p` applies `pOpen`, `p` and `pClose` in sequence. It returns the result of `p`.
 
-Once we've finished the parse and have the F# string returned from many. We use the operator `|>>`, it pipes the parser result to the `LispString` function. The `LispString` is the constructor (from our `LispVal` data type) to turn it into a `LispVal`. Every constructor in an Record type also acts like a function that turns its arguments into a value of its type. It also serves as a pattern that can be used in the left-hand side of a pattern-matching expression; we saw an example of this in Lesson 3.1 when we matched our parser result against the two constructors in the `Result` data type.
+Now we can put all the pieces together to get something almost readable and resembling our original definition.
+```fsharp
+let parseString: Parser<LispVal> =
+    betweenQuotes unquotedString |>> LispString
+```
+
+We use the operator `|>>` as it pipes the parser result to the `LispString` function. The `LispString` is the constructor (from our `LispVal` data type) to turn it into a `LispVal`. Every constructor in an Record type also acts like a function that turns its arguments into a value of its type. It also serves as a pattern that can be used in the left-hand side of a pattern-matching expression; we saw an example of this in Lesson 3.1 when we matched our parser result against the two constructors in the `Result` data type.
 
 Now let's move on to Scheme variables. An [atom](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-5.html#%_sec_2.1) is a letter or symbol, followed by any number of letters, digits, or symbols:
 
