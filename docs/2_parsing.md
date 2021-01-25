@@ -38,7 +38,7 @@ let readExpr input =
 
 As you can see from the type signature, readExpr is a function (->) from a string to a string. We name the parameter `input`, and pass it, along with the symbol parser we defined above to the `FParsec` function `run`. 
 
-`run` can return either the parsed value or an error, so we need to handle the error case. Following the `FParsec` convention, `FParsec`` returns an `ParseResult` data type, using the Failure constructor to indicate an error and the Success one for a normal value.
+`run` can return either the parsed value or an error, so we need to handle the error case. Following the `FParsec` convention, `FParsec` returns an `ParseResult` data type, using the Failure constructor to indicate an error and the Success one for a normal value.
 
 We use a `match ... with ` construction to match the result of parse against these alternatives. If we get a `Failure` value (error), then we bind the error itself to err and return "No match" with the string representation of the error. If we get a `Success` value, weignore it, and return the string "Found value".
 
