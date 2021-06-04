@@ -1,7 +1,7 @@
 # Parsing
 
 ## Writing a Simple Parser
-Now, let's try writing a very simple parser. We'll be using the  [fparsec](https://www.quanttec.com/fparsec/) to write a scheme parser in this chapter. You need to install `fparsec` using below command:
+Now, let's try writing a very simple parser. We'll be using the  [fparsec](https://www.quanttec.com/fparsec/) to write a Scheme parser in this chapter. You need to install `fparsec` using below command:
 
 ```bash
 dotnet add package fparsec
@@ -24,23 +24,23 @@ type Parser<'t> = Parser<'t, LispState>
 let pSymbol: Parser<_> = anyOf "!#$%&|*+-/:<=>?@^_~"
 ```
 
-This is an example of a monad: in this case, the "extra information" that is being hidden is all the info about position in the input stream, backtracking record, first and follow sets, etc. `FParsec` takes care of all of that for us. We need only use the `FParsec` library function oneOf, and it'll recognize a single one of any of the characters in the string passed to it. `FParsec` provides a number of pre-built parsers: for example, letter and digit are library functions. And as you're about to see, you can compose primitive parsers into more sophisticated productions.
+This is an example of a monad: in this case, the "extra information" that is being hidden is all the info about position in the input stream, backtracking record, first and follow sets, etc. `FParsec` takes care of all of that for us. We need only use the `FParsec` library function oneOf, and it'll recognize a single one of any of the characters in the string passed to it. `FParsec` provides a number of pre-built parsers: for example, letter and digit are library functions. And as you're about to see, you can compose primitive parsers into more sophisticated parsers.
 
-You may also noted that we add the explict type information for pSymbol, because we'll get a compile error without it. The error mentions F#'s "value restriction" which was explained in the  [documentation](https://www.quanttec.com/fparsec/tutorial.html#fs-value-restriction).
+You may also noted that we add the explict type information for pSymbol, because we'll get a compile error without it. The error mentions F#'s "value restriction" which is explained in the  [documentation](https://www.quanttec.com/fparsec/tutorial.html#fs-value-restriction).
 
 Let's define a function to call our parser and handle any possible errors:
 ```fsharp
-let readExpr input = 
+let readExpr input =
     match run pSymbol input with
     | Failure (_, err, _) -> sprintf "No match: %s"  (err.ToString())
     | Success _ -> "Found value"
 ```
 
-As you can see from the type signature, readExpr is a function (->) from a string to a string. We name the parameter `input`, and pass it, along with the symbol parser we defined above to the `FParsec` function `run`. 
+As you can see from the type signature, `readExpr` is a function (->) from a string to a string. We name the parameter `input`, and pass it, along with the symbol parser we defined above to the `FParsec` function `run`.
 
-`run` can return either the parsed value or an error, so we need to handle the error case. Following the `FParsec` convention, `FParsec` returns an `ParseResult` data type, using the Failure constructor to indicate an error and the Success one for a normal value.
+`run` can return either the parsed value or an error, so we need to handle the error case. Following the `FParsec` convention, `FParsec` returns a `ParseResult` data type, using the Failure constructor to indicate an error and the Success one for a normal value.
 
-We use a `match ... with ` construction to match the result of parse against these alternatives. If we get a `Failure` value (error), then we bind the error itself to err and return "No match" with the string representation of the error. If we get a `Success` value, weignore it, and return the string "Found value".
+We use a `match ... with ` construction to match the result of parse against these alternatives. If we get a `Failure` value (error), then we bind the error itself to err and return "No match" with the string representation of the error. If we get a `Success` value, we ignore it, and return the string "Found value".
 
 The `match ... with ` construction is an example of pattern matching, which we will see in much greater detail later on.
 
@@ -77,15 +77,15 @@ Let's fix that, so that we ignore whitespace.
 
 Now, let's edit our parse function so that it uses this new parser:
 ```fsharp
-let readExpr input = 
+let readExpr input =
     match run (spaces >>. pSymbol) input with
     | Failure (_, err, _) -> sprintf "No match: %s"  (err.ToString())
     | Success _ -> "Found value"
 ```
 The `>>.` is a combinator that `FParsc` provides. The parser ``p1 >>. p2`` parses p1 and p2 in sequence and returns the result of p2.
-- There is another companation operator `.>>` which also parses p1 and p2 in sequence but returns the result of p1 instead of p2. In each case the point points to the side of the parser whose result is returned. By combining both operators in p1 >>. p2 .>> p3 we obtain a parser that parses p1, p2 and p3 in sequence and returns the result from p2. As a mnemonic the dot at the composer helpers `>>.` and `.>>` mean which of the parsers are meant to be kept.
+- There is another composition operator `.>>` which also parses p1 and p2 in sequence but returns the result of p1 instead of p2. In each case the point points to the side of the parser whose result is returned. By combining both operators in `p1 >>. p2 .>> p3` we obtain a parser that parses p1, p2 and p3 in sequence and returns the result from p2. As a mnemonic the dot at the composer helpers `>>.` and `.>>` mean which of the parsers are meant to be kept.
 
-Compile and run this code. 
+Compile and run this code.
 ```bash
 $ dotnet run -- '|'
 Found value
@@ -104,7 +104,7 @@ Right now, the parser doesn't do much of anything—it just tells us whether a g
 First, we need to define a data type that can hold any Lisp value:
 
 ```fsharp
-type LispVal = 
+type LispVal =
     | LispAtom of string
     | LispList of List<LispVal>
     | LispDottedList of List<LispVal> * LispVal
@@ -113,11 +113,11 @@ type LispVal =
     | LispBool of bool
 ```
 
-This is an example of an `algebraic data type` (which called a [discriminated union](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/discriminated-unions) in F#): it defines a set of possible values that a variable of type LispVal can hold. Each alternative (called a constructor and separated by |) contains a name for the constructor along with the type of data that the constructor can hold. In this example, a LispVal can be:
+This is an example of an `algebraic data type` (which is called a [discriminated union](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/discriminated-unions) in F#): it defines a set of possible values that a variable of type LispVal can hold. Each alternative (called a constructor and separated by |) contains a name for the constructor along with the type of data that the constructor can hold. In this example, a LispVal can be:
 
 * An Atom, which stores a String naming the atom
 * A List, which stores a list of other LispVals (F# lists are denoted by the List<'T> generic type); also called a proper list
-> We prefer List over the more generic Seq type here, because List can be patten matched which will become useful later on.
+> We prefer List over the more generic Seq type here, because List can be pattern matched which will become useful later on.
 * A DottedList, representing the Scheme form (a b . c); also called an improper list. This stores a list of all elements but the last, and then stores the last element as another field
 * A Number, containing an F# Integer
 * A String, containing an F# String
@@ -159,29 +159,29 @@ let parseString: Parser<LispVal> =
     betweenQuotes unquotedString |>> LispString
 ```
 
-We use the operator `|>>` as it pipes the parser result to the `LispString` function. The `LispString` is the constructor (from our `LispVal` data type) to turn it into a `LispVal`. Every constructor in an Record type also acts like a function that turns its arguments into a value of its type. It also serves as a pattern that can be used in the left-hand side of a pattern-matching expression; we saw an example of this in Lesson 3.1 when we matched our parser result against the two constructors in the `Result` data type.
+We use the operator `|>>` as it pipes the parser result to the `LispString` function. The `LispString` is the constructor (from our `LispVal` data type) to turn it into a `LispVal`. Every constructor in a Record type also acts like a function that turns its arguments into a value of its type. It also serves as a pattern that can be used in the left-hand side of a pattern-matching expression; we saw an example of this in Lesson 3.1 when we matched our parser result against the two constructors in the `Result` data type.
 
 Now let's move on to Scheme variables. An [atom](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-5.html#%_sec_2.1) is a letter or symbol, followed by any number of letters, digits, or symbols:
 
 ```fsharp
-let parseAtom = 
-    pipe2 (letter <|> pSymbol) 
-          (manyChars (letter <|> digit <|> pSymbol)) 
-          (fun s rest -> 
+let parseAtom =
+    pipe2 (letter <|> pSymbol)
+          (manyChars (letter <|> digit <|> pSymbol))
+          (fun s rest ->
                 let atom = sprintf "%c%s" s rest
                 match atom with
                 | "#t" -> LispBool true
                 | "#f" -> LispBool false
-                | _ -> LispAtom atom) 
+                | _ -> LispAtom atom)
 ```
 
 Here, we introduce another `FParsec` combinator, the choice operator `<|>`. This tries the first parser, then if it fails, tries the second. If either succeeds, then it returns the value returned by that parser. The first parser must fail before it consumes any input: we'll see later how to implement backtracking.
 
-Once we've read the first character and the rest of the atom, we need to put them together. The "`let`" statement defines a new variable `atom`. We use the `sprintf` for this. Instead of `sprintf`, we could have used the concatenation operator `+` like this `s1 + s2`, but we need to convert s from `char` to `string` using `string s`, it would writes like: `let atom = (string s) + rest`.
+Once we've read the first character and the rest of the atom, we need to put them together. The "`let`" statement defines a new variable `atom`. We use the `sprintf` for this. Instead of `sprintf`, we could have used the concatenation operator `+` like this `s1 + s2`, but we need to convert `s` from `char` to `string` using `string s`, it would writes like: `let atom = (string s) + rest`.
 
 Then we use a [match expression](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/match-expressions) to determine which `LispVal` to create and return, matching against the literal strings for `true` and `false`. The underscore `_` alternative is a readability trick: match blocks continue until a `_` case (or fail any case which also causes the failure of the whole case expression), think of `_` as a wildcard. So if the code falls through to the `_` case, it always matches, and returns the value of `atom`.
 
-Finally, we create one more parser, for numbers. 
+Finally, we create one more parser, for numbers.
 
 ```fsharp
 let parseNumber: Parser<_> = pint64 |>> LispNumber
@@ -191,8 +191,8 @@ The `FParsec` parser `pint64` parses an  `int64` value. We'd like to construct a
 Let's create a parser that accepts either a string, a number, or an atom:
 
 ```fsharp
-let parseExpr = parseAtom <|> 
-                parseString <|> 
+let parseExpr = parseAtom <|>
+                parseString <|>
                 parseNumber
 ```
 
@@ -226,7 +226,7 @@ Now we put all the source code in the `Program.fs` which is not a good programmi
 ```fsharp
 module LispTypes
 
-type LispVal = 
+type LispVal =
     | LispAtom of string
     | ListAtom of List<LispVal>
     | LispDottedList of List<LispVal> * LispVal
@@ -247,26 +247,26 @@ type LispState = unit // doesn't have to be unit, of course
 type Parser<'t> = Parser<'t, LispState>
 
 let pSymbol: Parser<_> = anyOf "!#$%&|*+-/:<=>?@^_~"
-let parseString: Parser<LispVal> = 
-      between (pstring "\"") (pstring "\"") (manyChars (noneOf (Seq.toList "\""))) 
+let parseString: Parser<LispVal> =
+      between (pstring "\"") (pstring "\"") (manyChars (noneOf (Seq.toList "\"")))
             |>> LispString
-let parseAtom = 
-    pipe2 (letter <|> pSymbol) 
-          (manyChars (letter <|> digit <|> pSymbol)) 
-          (fun s rest -> 
+let parseAtom =
+    pipe2 (letter <|> pSymbol)
+          (manyChars (letter <|> digit <|> pSymbol))
+          (fun s rest ->
                 let atom = sprintf "%c%s" s rest
                 match atom with
                 | "#t" -> LispBool true
                 | "#f" -> LispBool false
-                | _ -> LispAtom atom) 
+                | _ -> LispAtom atom)
 
 let parseNumber: Parser<_> = pint64 |>> LispNumber
 
-let parseExpr = parseAtom <|> 
-                parseString <|> 
+let parseExpr = parseAtom <|>
+                parseString <|>
                 parseNumber
 
-let readExpr input = 
+let readExpr input =
     match run parseExpr input with
     | Failure (_, err, _) -> sprintf "No match: %s"  (err.ToString())
     | Success _ -> "Found value"
@@ -297,7 +297,7 @@ Add below test cases at the end of `Parser.fs`.
 let checkResult v r = match r with
                       | ParserResult.Success(e, _, _) -> e |> should equal v
                       | _ -> Assert.Fail "parse failed"
-  
+
 let checkParseFailed r = match r with
                          | ParserResult.Success(_, _, _) -> Assert.Fail("Expect parse fail")
                          | _ -> ()
@@ -320,8 +320,8 @@ Test Pased - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duratio
 ```
 
 ## Exercises
-1. Our strings aren't quite [R5RS compliant](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.5), because they don't support escaping of internal quotes within the string. Change parseString so that \" gives a literal quote character instead of terminating the string. You may want to replace noneOf "\"" with a new parser action that accepts either a non-quote character or a backslash followed by a quote mark.
-2. Add a Character constructor to LispVal, and create a parser for [character literals](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4) as described in R5RS.
+1. Our strings aren't quite [R5RS compliant](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.5), because they don't support escaping of internal quotes within the string. Change parseString so that `\"` gives a literal quote character instead of terminating the string. You may want to replace `noneOf "\""` with a new parser action that accepts either a non-quote character or a backslash followed by a quote mark.
+2. Add a `Character` constructor to LispVal, and create a parser for [character literals](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4) as described in R5RS.
 3. Add a `Float` constructor to LispVal, and support R5RS syntax for [decimals](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.2.4).
 4. Add data types and parsers to support the [full numeric tower](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.2.1) of Scheme numeric types. F# has built-in types to represent many of these; check the documents. For the others, you can define compound types (e.g. Records) that represent e.g. a `Rational` as a numberator and denominator, or a `Complex` as a real and imaginary part (each itself a `Real`).
 5. Add more tests to `Parser.fs`, so we can be more confident with our parser functionality.
@@ -374,7 +374,7 @@ Try to compile the project and bong! You would get a bounch of compile errors li
 Error FS0039: undefined value or constructure "parseExpr".
 ```
 
-This error happens because we defined the `parseExpr` as a recursive value, referencing in `parseList` and `parseQuoted` which also need to reference `parseExpr`. Fortunately `FParsec` provides a workaround for such case the `createParserForwardedToRef`, 
+This error happens because we defined the `parseExpr` as a recursive value, referencing in `parseList` and `parseQuoted` which also need to reference `parseExpr`. Fortunately `FParsec` provides a workaround for such case the `createParserForwardedToRef`,
 Add codes to the `Parser.fs`
 ```fsharp
 let parseExpr, parseExprRef = createParserForwardedToRef () // add before parseList and parseDottedList
@@ -388,7 +388,7 @@ parseExprRef
             (between (pchar '(') (pchar ')') (attempt parseList <|> parseDottedList)) ]
 ```
 
-The `createParserForwardedToRef()` creates a parser which will actually use the parserRef (which is a [reference cell](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/reference-cells) in F#) later on. And we use the  `:=` syntax to rebind the `parseExpRef` value. 
+The `createParserForwardedToRef()` creates a parser which will actually use the parserRef (which is a [reference cell](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/reference-cells) in F#) later on. And we use the  `:=` syntax to rebind the `parseExpRef` value.
 
 Now compile and run the code:
 ```bash

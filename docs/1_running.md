@@ -1,12 +1,12 @@
 # First Steps: Compiling and running
-First, you'll need to install .Net. .Net is a free, cross-platform, open source developer platform for building many different types of applications. It's downloadable from https://dotnet.microsoft.com/download. Follow the install instructions on the offical site (which contains the latest and up to date information) to install it. 
+First, you'll need to install .NET. .NET is a free, cross-platform, open source developer platform for building many different types of applications. It's downloadable from https://dotnet.microsoft.com/download. Follow the install instructions on the offical site (which contains the latest and up to date information) to install it.
 
-For Windows users, Visual Studio Communtity Version is a pretty great IDE to develop F# applications.  VS Code with the [Ionide Extensions](https://ionide.io/Editors/Code/getting_started.html) extension installed is also a great alternative to use on other platforms, they can be used on MacOS or Linux.
+For Windows users, Visual Studio Communtity Version is a pretty great IDE to develop F# applications. VS Code with the [Ionide Extensions](https://ionide.io/Editors/Code/getting_started.html) extension installed is also a great alternative to use on other platforms, they can be used on MacOS or Linux.
 
 
-Now, it's time for your first F# program. This program will read a name off the command line and then print a greeting. Create a new project using command `dotnet new console -lang F# --name write-yourself-a-scheme `. You can find more on the `dotnet new`` command by checking its [documentation](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-new)
+Now, it's time for your first F# program. This program will read a name off of the command line and then print a greeting. Create a new project using command `dotnet new console -lang F# --name write-yourself-a-scheme`. You can find more on the `dotnet new` command by checking its [documentation](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-new)
 
-Goto the directory using `cd write-yourself-a-scheme`, edit `Program.fs` and update its content to below:
+Go to the directory using `cd write-yourself-a-scheme`, edit `Program.fs` and update its content to the code shown below:
 ```fsharp
 open System
 
@@ -17,21 +17,21 @@ let main argv =
     0 // return an integer exit code
 ```
 
-Let's go through this code. The first line specify that we open the System module. The next section it the `[<EntryPoint>]` annonation, every F# program must have one entrypoint which was specified by the `[<>]` annotation. In F# this kind annotation is called attributes. Attributes enable metadata to be applied to a programming construct. We'll later see another annotations to mark a function for unit testing. You can check its [document](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/attributes) for futher understanding.
+Let's go through this code. The first line specifies that we open the System module. The next section is the `[<EntryPoint>]` annotation, every F# program must have one entrypoint which is specified by the `[<>]` annotation. In F# these kinds of annotations are called attributes. Attributes enable metadata to be applied to a programming construct. We'll later see another annotation to mark a function for unit testing. You can check the [documentation on attributes](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/attributes) for futher understanding.
 
-The line `let main argv = ` is a type declaration: it says that main is function that takes one argument. In F# functions are normally just defined as variables, they both use the `let` keyword. Then we associates the `who` name to either 'F#' or the first command line argument passed in.  Argv is an array of arguments user passed while executing the program. You may notice that we didn't specify the argv type or the return value type of the main function, F# has a very strong [type inference](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/type-inference) feature and normally it will infer the types based on the context. Most times you don't have to specify the types explictly while writing F# program. You can still apply explict type annotations if it's really necessary.
+The line `let main argv = ` is a type declaration: it says that main is a function that takes one argument. In F# functions are normally just defined as variables; they both use the `let` keyword. Then we associate the `who` name to either 'F#' or the first command line argument passed in. `argv` is an array of arguments user passed while executing the program. You may notice that we didn't specify the `argv` type or the return value type of the main function, F# has a very strong [type inference](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/type-inference) feature and normally it will infer the types based on the context. Most times you don't have to specify the types explictly while writing F# program. You can still apply explict type annotations if it's really necessary.
 
-Readers with other programming language background might also found we're using single equal sign to test the equality. And yes! In F#, equality are checked using a single `=` not `==`!
+Readers with a background in another programming language might also find we're using single equal sign to test the equality. And yes! In F#, equality is checked using a single `=` not `==`!
 
-We use the `printfn` function to write texts to the console which was provided by the System module. F# is not a pure functional programming language, no liking haskell we don't have to provide an IO monad to perform IO operations in F#.
+We use the `printfn` function to write text to the console which was provided by the System module. F# is not a pure functional programming language, unlike Haskell we don't have to provide an IO monad to perform IO operations in F#.
 
 To compile and run the program, try something like this:
-``` bash
+```bash
 $ dotnet run
 $ dotnet run -- jacky
 ```
 
-The command `dotnet run` compiles and run the program. And in the second command we use the `--` to pass arguments to the program.
+The command `dotnet run` compiles and runs the program. And in the second command we use the `--` to pass arguments to the program.
 
 ## Exercises
 1. Change the program so it reads two arguments from the command line, and prints out a message using both of them
