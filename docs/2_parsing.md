@@ -228,7 +228,7 @@ module LispTypes
 
 type LispVal =
     | LispAtom of string
-    | ListAtom of List<LispVal>
+    | ListList of List<LispVal>
     | LispDottedList of List<LispVal> * LispVal
     | LispNumber of int64
     | LispString of string
