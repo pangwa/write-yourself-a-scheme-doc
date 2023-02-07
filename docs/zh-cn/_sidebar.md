@@ -1,5 +1,5 @@
-- [Overview](/)
-- [First Steps: Compiling and running](1_running.md)
+- [总览](/zh-cn/)
+- [第一步: 编译并运行](1_running.md)
 - [First Steps: Testing](1_1_testing.md)
 - [Parsing](2_parsing.md)
 - [Evaluation Part 1](evaluation_part1.md)
@@ -12,5 +12,5 @@
 - [Towards a Standard Library](towards_std_lib.md)
 - [Conclusion & Futher Resources](conclusion.md)
 
-- [:us:,uk:](/)
+- [:us:, :uk:](/)
 - [:cn:](/zh-cn/)
