@@ -12,5 +12,5 @@
 - [Towards a Standard Library](towards_std_lib.md)
 - [Conclusion & Futher Resources](conclusion.md)
 
-- [:us:,uk:](/)
+- [:us:,:uk:](/)
 - [:cn:](/zh-cn/)
