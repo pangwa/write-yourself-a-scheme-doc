@@ -1,12 +1,15 @@
 # Write Yourself a Scheme in 48 hours using F#!
+
 This is the F# fork of the haskell version [Write Yourself a Scheme in 48 hours](https://en.wikibooks.org/wiki/Write_Yourself_a_Scheme_in_48_Hours). Enjoy it!
 
 ## Get Started
-This repo is written using [docsify](https://sify.js.org/). Follow docsify's [quick start](https://docsify.js.org/#/quickstart) to setup the tools.
+
+This repo is written using [docsify](https://docsify.js.org/). Follow docsify's [quick start](https://docsify.js.org/#/quickstart) to setup the tools.
 
 After setup docsify, you can use the `docsify serve docs` command to serve this website.
 
 ## Contributing
+
 Contributions are welcome, you can submit translations, bug fixes, adjust wordings etc. Any contributions you make are **greatly appreciated**.
 
 1. Fork the Project
@@ -16,6 +19,7 @@ Contributions are welcome, you can submit translations, bug fixes, adjust wordin
 5. Open a Pull Request
 
 ## Love this project?
+
 You can buy me a coffee if you enjoyed this tutorial!
 
 <a href="https://www.buymeacoffee.com/pangwa"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=pangwa&button_colour=5F7FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00"></a>
